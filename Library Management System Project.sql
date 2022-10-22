@@ -11,10 +11,12 @@ CREATE DATABASE db_Library
 USE db_Library
 GO
 
+/* CREATE DATABASE TABLES (22/10/22) */
+
 --Create 'Publisher' table
 CREATE TABLE tbl_Publisher (
 	PublisherName NVARCHAR(50) PRIMARY KEY NOT NULL, -- Create field 'PublisherName' which is a fixed 50 character UNICODE string and also the table PRIMARY KEY (NULL VALUES NOT ALLOWED)
-	Address NVARCHAR(50) NOT NULL, -- Create field 'Address' which is a fixed 50 character UNICODE string (NULL VALUES NOT ALLOWED)
+	Address NVARCHAR(80) NOT NULL, -- Create field 'Address' which is a fixed 80 character UNICODE string (NULL VALUES NOT ALLOWED)
 	Phone NVARCHAR(15) NOT NULL -- Create field 'Phone' which is a fixed 15 character UNICODE string (NULL VALUES NOT ALLOWED)
 );
 
@@ -38,14 +40,14 @@ CREATE TABLE tbl_Book_Authors (
 CREATE TABLE tbl_Library_Branch (
 	BranchID INT PRIMARY KEY NOT NULL IDENTITY (1, 1), -- Create field 'BranchID' which is an INTEGER and also the table PRIMARY KEY which starts at 1 and increments from there (NULL VALUES NOT ALLOWED)
 	BranchName NVARCHAR(50) NOT NULL, -- Create field 'BranchName' which is a fixed 50 character UNICODE string (NULL VALUES NOT ALLOWED)
-	Address NVARCHAR(50) NOT NULL -- Create field 'Address' which is a fixed 50 character UNICODE string (NULL VALUES NOT ALLOWED)
+	Address NVARCHAR(80) NOT NULL -- Create field 'Address' which is a fixed 80 character UNICODE string (NULL VALUES NOT ALLOWED)
 );
 
 -- Create 'Borrower' table
 CREATE TABLE tbl_Borrower (
 	CardNo INT PRIMARY KEY NOT NULL IDENTITY (100000, 1), -- Create field 'CardNo' which is an INTEGER and the table PRIMARY KEY which starts at 100000 an increments from there (NULL VALUES NOT ALLOWED)
 	Name NVARCHAR(50) NOT NULL, -- Create field 'Name' which is a fixed 50 character UNICODE string (NULL VALUES NOT ALLOWED)
-	Address NVARCHAR(50) NOT NULL, -- Create field 'Address' which is a fixed 50 character UNICODE string (NULL VALUES NOT ALLOWED)
+	Address NVARCHAR(80) NOT NULL, -- Create field 'Address' which is a fixed 80 character UNICODE string (NULL VALUES NOT ALLOWED)
 	Phone NVARCHAR(15) NOT NULL -- -- Create field 'Address' which is a fixed 15 character UNICODE string (NULL VALUES NOT ALLOWED)
 );
 
@@ -66,6 +68,149 @@ CREATE TABLE tbl_Book_Loans (
 	BranchID INT NOT NULL CONSTRAINT fk_BranchID_Book_Loans FOREIGN KEY REFERENCES tbl_Library_Branch(BranchID) ON UPDATE CASCADE ON DELETE CASCADE,
 	/* Create field 'CardNo' which is a FOREIGN KEY connecting this table to the 'Borrower' table, the field in an INTEGER (NULL VALUES NOT ALLOWED) */
 	CardNo INT NOT NULL CONSTRAINT fk_CardNo FOREIGN KEY REFERENCES tbl_Borrower(CardNo) ON UPDATE CASCADE ON DELETE CASCADE,
-	DateOut DATE, -- Create field 'DateOut' which is a DATE field (format YYYY-MM-DD) (NULL VALUES NOT ALLOWED)
-	DateDue DATE -- Create field 'DateDue' which is a DATE field (format YYYY-MM-DD) (NULL VALUES NOT ALLOWED)
+	DateOut DATE NOT NULL, -- Create field 'DateOut' which is a DATE field (format YYYY-MM-DD) (NULL VALUES NOT ALLOWED)
+	DateDue DATE NOT NULL -- Create field 'DateDue' which is a DATE field (format YYYY-MM-DD) (NULL VALUES NOT ALLOWED)
 );
+
+/* POPULATE TABLES (22/10/22) */
+
+-- Populate table 'Library Branch' (22/10/22)
+
+INSERT INTO tbl_Library_Branch -- Insert into the table 'tbl_Library_Branch'
+	(BranchName, Address) -- into the columns 'BranchName' and 'Address'
+	VALUES -- the following values
+	('Ipswich', '89 Austin Street, Ipswich, Suffolk, IP28DF'),
+	('Mansfield', '21 Argyle Close, Mansfield, Nottinghamshire, NG200JH'),
+	('Sharpstown', '44 Prince of Wales Drive, Sharpstown, Norfolk, NR23TR'),
+	('Bramford', 'The Street, Bramford, Ipswich, Suffolk, IP84DU'),
+	('Tibshelf', '24 High Street, Tibshelf, Alfreton, DE555NY'),
+	('Carlton Colville', '52 Wharfdale Drive, Lowestoft, Suffolk, CL447SZ')
+;
+
+-- Populate table 'Borrower' (22/10/22)
+
+INSERT INTO tbl_Borrower -- Insert into the table 'tbl_Borrower'
+	(Name, Address, Phone) -- into the colummns 'Name', 'Address' and 'Phone'
+	VALUES -- the following values
+	('Steven Partlow', '53 Recreation Road, Stowmarket, IP14 1JT', '01449 322101' ),
+	('Sophia Mattews', '19 Threadneedle Street, Hadleigh, IP7 5DF', '01473 476875'),
+	('Julie Sharman', '40 Lavenham Road, Ipswich, IP2 0LA', '01473 880810'),
+	('Lynda Wells', '24 Kingsmead Road, Stowmarket, IP14 1LT', '01449 048485'),
+	('Clarke Robus', '293 Colchester Road, Ipswich, IP4 4SG', '01473 114554'),
+	('Ciara Caldwell', '2 Commerce Street, Sharpstown, ST3 1NH', '01782 626578'),
+	('Lesley Lea', '72 Peveril Road, Tibshelf, DE55 5LR', '01623 837621'),
+	('Gemma Bradford', '17 Redcliffe Road, Mansfield, NG18 2QH', '01623 104421'),
+	('Albert Fairfield', '3 Lingfield Close, Mansfield, NG18 3LW', '01623 727001'),
+	('Samantha Lea', '27 Pockthorpe Gate, Lowestoft, NR3 1TU,', '01603 368836'),
+	('Damien Johnson', '86 Youlgreave Avenue, Sharpstown, ST2 9LF', '01782 183724'),
+	('Tracy Moore', '307 Wroxham Road, Lowestoft, NR7 8RN', '01603 367872')
+;
+
+-- Populate table 'Publisher' (22/10/22)
+
+INSERT INTO tbl_Publisher -- Insert into the table 'tbl_Publilsher'
+	(PublisherName, Address, Phone) -- into the colummns 'PublisherName', 'Address' and 'Phone'
+	VALUES -- the following values
+	('Penguin Random House', '2D Greenwich South Street, London, SE10 8TY', '020 2481 3830'),
+	('Hachette Livre', '61 The Vista, London, SE9 5RE', '01689 353111'),
+	('HarperCollins', '64 Jasper Road, London, SE19 1SQ', '020 2458 1251'),
+	('Titan Books', '51A Station Approach, South Ruislip, HA4 6SL', '01895 004525'),
+	('Oxford University Press', '59 - 61 Cornmarket Street, Oxford, OX1 3HB', '01865 745273'),
+	('Black Library', '4 Phoenix Place, Nottingham, NG8 6BA', '0115 051 4275'),
+	('Simon & Schuster', '5 Churchfields Avenue, Weybridge, KT13 9YA', '01932 013008'),
+	('Bloomsbury', '219 Hamilton Drive West, York, YO24 4PL', '01904 136533'),
+	('John Wiley & Sons', 'Glasfryn, Cynwyd, LL21 0LT', '01490 244813'),
+	('Tor - Forge', '43 Roundthorn Road, Manchester, M23 1FL', '0161 205 2031')
+;
+
+-- !!!!!!!RESUME FROM HERE!!!!!!!!! --
+
+-- Populate table 'Books' (22/10/22)
+
+INSERT INTO tbl_Books -- Insert into the table 'tbl_Books'
+	(Title, PublisherName) -- into the colummns 'Title' and 'PublisherName'
+	VALUES -- the following values
+	/* 1001 */('Fire & Blood', 'Penguin Random House'),
+	/* 1002 */('Shadow Reel', 'Penguin Random House'),
+	/* 1003 */('Comedy Comedy Comedy', 'Penguin Random House'),
+	/* 1004 */('Eisenhorn', 'Black Library'),
+	/* 1005 */('The Wraithbone Phoenix', 'Black Library'),
+	/* 1006 */('Echoes of Eternity', 'Black Library'),
+	/* 1007 */('First and Only', 'Black Library'),
+	/* 1008 */('On the Origin of the Species', 'Hachette Livre'),
+	/* 1009 */('The Famous Five', 'Hachette Livre'),
+	/* 1010 */('The Lost Tribe', 'HarperCollins'),
+	/* 1011 */('The Lord of the Rings', 'HarperCollins'),
+	/* 1012 */('Descendant Machine', 'Titan Books'),
+	/* 1013 */('Stars and Bones', 'Titan Books'),
+	/* 1014 */('Light of Impossible Stars', 'Titan Books'),
+	/* 1015 */('Seven Myths of the Spanish Conquest', 'Oxford University Press'),
+	/* 1016 */('The Code Breaker', 'Simon & Schuster'),
+	/* 1017 */('The White Queen', 'Simon & Schuster'),
+	/* 1018 */('Database Systems', 'Bloomsbury'),
+	/* 1019 */('Introduction to Modeling and Simulation', 'John Wiley & Sons'),
+	/* 1020 */('Software Architect', 'John Wiley & Sons'),
+	/* 1021 */('The Third Instinct', 'Tor - Forge')
+;
+
+-- Populate table 'Book Authors' (22/10/22)
+
+INSERT INTO tbl_Book_Authors -- Insert into the table 'Book Authors'
+	(BookID, AuthorName) -- into the colummns 'AuthorName'
+	VALUES -- the following values
+	(1001, 'George RR Martin'),
+	(1002, 'C J Box'),
+	(1003, 'Bob Odenkirk'),
+	(1004, 'Dan Abnett'),
+	(1005, 'Alec Worley'),
+	(1006, 'Aaron Demski Bowden'),
+	(1007, 'Dan Abnett'),
+	(1008, 'Charles Darwin'),
+	(1009, 'Enid Blyton'),
+	(1010, 'Erik Gross'),
+	(1011, 'J RR Tolkien'),
+	(1012, 'Gareth L Powell'),
+	(1013, 'Gareth L Powell'),
+	(1014, 'Gareth L Powell'),
+	(1015, 'Matthew Restall'),
+	(1016, 'Walter Isaacson'),
+	(1017, 'Philippa Gregory'),
+	(1018, 'Paul Beynon-Davies'),
+	(1019, 'Mark W Spong'),
+	(1020, 'Micheal Bell'),
+	(1021, 'Kent Lester')
+;
+
+-- Populate table 'Book Copies' (/10/22)
+
+INSERT INTO tbl_Book_Copies -- Insert into the table 'tbl_Book_Copies'
+	(PublisherName, Address, Phone) -- into the colummns 'PublisherName', 'Address' and 'Phone'
+	VALUES -- the following values
+	('', '', ''),
+	('', '', ''),
+	('', '', ''),
+	('', '', ''),
+	('', '', ''),
+	('', '', ''),
+	('', '', ''),
+	('', '', ''),
+	('', '', ''),
+	('', '', '')
+;
+
+-- Populate table 'Book Loans' (/10/22)
+
+INSERT INTO tbl_Book_Loans -- Insert into the table 'tbl_Book_Loans'
+	(PublisherName, Address, Phone) -- into the colummns 'PublisherName', 'Address' and 'Phone'
+	VALUES -- the following values
+	('', '', ''),
+	('', '', ''),
+	('', '', ''),
+	('', '', ''),
+	('', '', ''),
+	('', '', ''),
+	('', '', ''),
+	('', '', ''),
+	('', '', ''),
+	('', '', '')
+;
