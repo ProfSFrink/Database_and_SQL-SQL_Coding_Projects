@@ -102,7 +102,7 @@ INSERT INTO tbl_Borrower -- Insert into the table 'tbl_Borrower'
 	('Gemma Bradford', '17 Redcliffe Road, Mansfield, NG18 2QH', '01623 104421'),
 	('Albert Fairfield', '3 Lingfield Close, Mansfield, NG18 3LW', '01623 727001'),
 	('Samantha Lea', '27 Pockthorpe Gate, Lowestoft, NR3 1TU,', '01603 368836'),
-	('Damien Johnson', '86 Youlgreave Avenue, Sharpstown, ST2 9LF', '01782 183724'),
+	('Damien Johnson', '86 Youlgreave Avenue, Stowbridge, CO2 9LF', '01782 183724'),
 	('Tracy Moore', '307 Wroxham Road, Lowestoft, NR7 8RN', '01603 367872')
 ;
 
@@ -247,12 +247,39 @@ INSERT INTO tbl_Book_Loans -- Insert into the table 'tbl_Book_Loans'
 	(1030, 1, 100001, '2022-10-23', '2022-01-30')
 ;
 
-SELECT tbl_Books.BookID, tbl_Books.Title, tbl_Book_Authors.AuthorName, tbl_Books.PublisherName, tbl_Library_Branch.BranchID, tbl_Library_Branch.BranchName, tbl_Book_Copies.Number_of_Copies
+/* TEST QUERIES TO ENSURE DATA IS IN THE TABLES CORRECTLY */
+
+SELECT * 
+	FROM tbl_Library_Branch
+
+SELECT *
+	FROM tbl_Book_Copies
+
+SELECT *
+	FROM tbl_Books
+
+SELECT *
+	FROM tbl_Book_Authors
+
+SELECT * 
+	FROM tbl_Borrower
+
+SELECT *
+	FROM tbl_Book_Loans
+
+SELECT *
+	FROM tbl_Publisher
+
+SELECT tbl_Books.BookID AS 'Book ID:', tbl_Books.Title AS 'Book Title:', tbl_Book_Authors.AuthorName AS 'Author Name:', tbl_Books.PublisherName AS 'Publisher Name:',
+	   tbl_Library_Branch.BranchID AS 'Branch ID:', tbl_Library_Branch.BranchName AS 'Branch Name:', tbl_Book_Copies.Number_of_Copies AS 'Number of Book Copies:'
 	FROM tbl_Book_Copies
 	INNER JOIN tbl_Library_Branch ON tbl_Library_Branch.BranchID = tbl_Book_Copies.BranchID
 	INNER JOIN tbl_Books ON tbl_Books.BookID = tbl_Book_Copies.BookID
 	INNER JOIN tbl_Book_Authors ON tbl_Book_Authors.BookID = tbl_Books.BookID
-	ORDER BY BranchID
+	ORDER BY tbl_Books.BookID
 
-SELECT * 
-	FROM tbl_Book_Loans
+SELECT *
+	FROM ((tbl_Book_Loans 
+	FULL OUTER JOIN tbl_Borrower ON tbl_Book_Loans.CardNo = tbl_Borrower.CardNo) 
+	FULL OUTER JOIN tbl_Books ON tbl_Book_Loans.BookID = tbl_Books.BookID)
+	ORDER BY BranchID DESC;
