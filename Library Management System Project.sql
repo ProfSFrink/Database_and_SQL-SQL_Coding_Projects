@@ -120,12 +120,11 @@ INSERT INTO tbl_Publisher -- Insert into the table 'tbl_Publilsher'
 	('Simon & Schuster', '5 Churchfields Avenue, Weybridge, KT13 9YA', '01932 013008'),
 	('Bloomsbury', '219 Hamilton Drive West, York, YO24 4PL', '01904 136533'),
 	('John Wiley & Sons', 'Glasfryn, Cynwyd, LL21 0LT', '01490 244813'),
-	('Tor - Forge', '43 Roundthorn Road, Manchester, M23 1FL', '0161 205 2031')
+	('Tor - Forge', '43 Roundthorn Road, Manchester, M23 1FL', '0161 205 2031'),
+	('CreateSpace Independent Publishing' , '2856 Camden Place, Mount Pleasant, 29464', '843-849-6244')
 ;
 
--- !!!!!!!RESUME FROM HERE!!!!!!!!! --
-
--- Populate table 'Books' (22/10/22)
+-- Populate table 'Books' (23/10/22)
 
 INSERT INTO tbl_Books -- Insert into the table 'tbl_Books'
 	(Title, PublisherName) -- into the colummns 'Title' and 'PublisherName'
@@ -150,10 +149,19 @@ INSERT INTO tbl_Books -- Insert into the table 'tbl_Books'
 	/* 1018 */('Database Systems', 'Bloomsbury'),
 	/* 1019 */('Introduction to Modeling and Simulation', 'John Wiley & Sons'),
 	/* 1020 */('Software Architect', 'John Wiley & Sons'),
-	/* 1021 */('The Third Instinct', 'Tor - Forge')
+	/* 1021 */('The Third Instinct', 'Tor - Forge'),
+	/* 1022 */('The Hobbit', 'HarperCollins'),
+	/* 1023 */('The Silmarillion', 'HarperCollins'),
+	/* 1024 */('Sega Arcade Classics Vol. 1', 'CreateSpace Independent Publishing'),
+	/* 1025 */('Sega Arcade Classics Vol. 2', 'CreateSpace Independent Publishing'),
+	/* 1026 */('Data East Arcade Classics', 'CreateSpace Independent Publishing'),
+	/* 1027 */('Horus Rising', 'Black Library'),
+	/* 1028 */('Day of Ascension', 'Black Library'),
+	/* 1029 */('Sigismund - The Eternal Crusader', 'Black Library'),
+	/* 1030 */('Tinker Taylor Soldier Spy', 'Penguin Random House')
 ;
 
--- Populate table 'Book Authors' (22/10/22)
+-- Populate table 'Book Authors' (23/10/22)
 
 INSERT INTO tbl_Book_Authors -- Insert into the table 'Book Authors'
 	(BookID, AuthorName) -- into the colummns 'AuthorName'
@@ -178,39 +186,73 @@ INSERT INTO tbl_Book_Authors -- Insert into the table 'Book Authors'
 	(1018, 'Paul Beynon-Davies'),
 	(1019, 'Mark W Spong'),
 	(1020, 'Micheal Bell'),
-	(1021, 'Kent Lester')
+	(1021, 'Kent Lester'),
+	(1022, 'J RR Tolkien'),
+	(1023, 'J RR Tolkien'),
+	(1024, 'Kurt Kalata'),
+	(1025, 'Kurt Kalata'),
+	(1026, 'Kurt Kalata'),
+	(1027, 'Dan Abnett'),
+	(1028, 'Adrian Tchaikovsky'),
+	(1029, 'John French'),
+	(1030, 'John Le Carre')
 ;
 
--- Populate table 'Book Copies' (/10/22)
+-- Populate table 'Book Copies' (23/10/22)
 
 INSERT INTO tbl_Book_Copies -- Insert into the table 'tbl_Book_Copies'
-	(PublisherName, Address, Phone) -- into the colummns 'PublisherName', 'Address' and 'Phone'
+	(BookID, BranchID, Number_of_Copies) -- into the colummns 'BookID', 'BranchID' and 'Number of Copies'
 	VALUES -- the following values
-	('', '', ''),
-	('', '', ''),
-	('', '', ''),
-	('', '', ''),
-	('', '', ''),
-	('', '', ''),
-	('', '', ''),
-	('', '', ''),
-	('', '', ''),
-	('', '', '')
+	('1011', '1', '10'),
+	('1004', '1', '3'),
+	('1030', '1', '8'),
+	('1025', '1', '2'),
+	('1015', '1', '6'),
+	('1001', '2', '5'),
+	('1008', '2', '12'),
+	('1022', '2', '6'),
+	('1002', '2', '3'),
+	('1026', '2', '4'),
+	('1010', '3', '5'),
+	('1021', '3', '4'),
+	('1017', '3', '2'),
+	('1024', '3', '5'),
+	('1005', '3', '7'),
+	('1013', '4', '3'),
+	('1018', '4', '2'),
+	('1016', '4', '4'),
+	('1002', '5', '9'),
+	('1011', '5', '6'),
+	('1003', '5', '2'),
+	('1021', '5', '2'),
+	('1007', '6', '6'),
+	('1011', '6', '5'),
+	('1019', '6', '2')
 ;
 
 -- Populate table 'Book Loans' (/10/22)
 
 INSERT INTO tbl_Book_Loans -- Insert into the table 'tbl_Book_Loans'
-	(PublisherName, Address, Phone) -- into the colummns 'PublisherName', 'Address' and 'Phone'
+	(BookID, BranchID, CardNo, DateOut, DateDue) -- into the colummns 'BookID', 'BranchID', 'CardNo', 'DateOut', and 'DateDue'
 	VALUES -- the following values
-	('', '', ''),
-	('', '', ''),
-	('', '', ''),
-	('', '', ''),
-	('', '', ''),
-	('', '', ''),
-	('', '', ''),
-	('', '', ''),
-	('', '', ''),
-	('', '', '')
+	(1004, 1, 100000, '2022-10-21', '2022-10-28'),
+	(1001, 2, 100007, '2022-10-22', '2022-10-29'),
+	(1011, 6, 100009, '2022-10-26', '2022-11-02'),
+	(1010, 3, 100005, '2022-10-24', '2022-10-31'),
+	(1005, 3, 100008, '2022-10-29', '2022-11-06'),
+	(1013, 4, 100010, '2022-10-22', '2022-10-29'),
+	(1016, 4, 100010, '2022-10-22', '2022-10-29'),
+	(1003, 5, 100006, '2022-10-19', '2022-10-27'),
+	(1007, 5, 100011, '2022-10-03', '2022-10-11'),
+	(1030, 1, 100001, '2022-10-23', '2022-01-30')
 ;
+
+SELECT tbl_Books.BookID, tbl_Books.Title, tbl_Book_Authors.AuthorName, tbl_Books.PublisherName, tbl_Library_Branch.BranchID, tbl_Library_Branch.BranchName, tbl_Book_Copies.Number_of_Copies
+	FROM tbl_Book_Copies
+	INNER JOIN tbl_Library_Branch ON tbl_Library_Branch.BranchID = tbl_Book_Copies.BranchID
+	INNER JOIN tbl_Books ON tbl_Books.BookID = tbl_Book_Copies.BookID
+	INNER JOIN tbl_Book_Authors ON tbl_Book_Authors.BookID = tbl_Books.BookID
+	ORDER BY BranchID
+
+SELECT * 
+	FROM tbl_Book_Loans
