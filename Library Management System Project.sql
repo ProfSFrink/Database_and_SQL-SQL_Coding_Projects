@@ -214,6 +214,8 @@ INSERT INTO tbl_Book_Copies -- Insert into the table 'tbl_Book_Copies'
 	('1002', '2', '3'),
 	('1026', '2', '4'),
 	('1010', '3', '5'),
+	('1010', '5', '2'),
+	('1010', '6', '7'),
 	('1021', '3', '4'),
 	('1017', '3', '2'),
 	('1024', '3', '5'),
@@ -230,7 +232,7 @@ INSERT INTO tbl_Book_Copies -- Insert into the table 'tbl_Book_Copies'
 	('1019', '6', '2')
 ;
 
--- Populate table 'Book Loans' (/10/22)
+-- Populate table 'Book Loans' (23/10/22)
 
 INSERT INTO tbl_Book_Loans -- Insert into the table 'tbl_Book_Loans'
 	(BookID, BranchID, CardNo, DateOut, DateDue) -- into the colummns 'BookID', 'BranchID', 'CardNo', 'DateOut', and 'DateDue'
@@ -247,39 +249,112 @@ INSERT INTO tbl_Book_Loans -- Insert into the table 'tbl_Book_Loans'
 	(1030, 1, 100001, '2022-10-23', '2022-01-30')
 ;
 
+/* Example QUERY to show how each of the tables RELATE to each other (23/10/22) */
+
+SELECT * -- SELECT ALL COLUMNS from the following tables
+	FROM ((tbl_Book_Loans -- 
+	/* Then starting with 'tbl_Book_Loans' SELECT all rows that match the following OUTER JOINS */ 
+	/* FULL OUTER JOIN the column 'CardNo' between the tables 'tbl_Book_Loans' and 'tbl_Borrower' */
+	FULL OUTER JOIN tbl_Borrower ON tbl_Book_Loans.CardNo = tbl_Borrower.CardNo) 
+	/* FULL OUTER JOIN the column 'BookID' between the tables 'tbl_Book_Loans' and 'tbl_Books' */
+	FULL OUTER JOIN tbl_Books ON tbl_Book_Loans.BookID = tbl_Books.BookID)
+	/* Order result by 'BranchID' in DESCENDING order */
+	ORDER BY BranchID DESC;
+
+/* Using the library database we created write a QUERY that returns all book titles and the authors name (24/10/22) */
+
+/* SELECT the columns 'BookID' with ALIAS 'Book ID', 'Title' with ALIAS 'Book Title' and 'PublisherName' with ALIAS 'Publisher Name:' from 'tbl_Books' and 'AuthorName' 
+   with ALIAS 'Author Name:' from 'tbl_Book_Authors'  */
+SELECT tbl_Books.BookID AS 'Book ID:', tbl_Books.Title AS 'Book Title:', tbl_Book_Authors.AuthorName AS 'Author Name:', tbl_Books.PublisherName AS 'Publisher Name:'
+	FROM tbl_Books
+	/* Then starting with 'tbl_Books' SELECT all rows listed above that match the following INNER JOIN */
+	/* INNER JOIN the column 'BookID' between the tables 'tbl_Book_Authors' and 'tbl_Books' */
+	INNER JOIN tbl_Book_Authors ON tbl_Book_Authors.BookID = tbl_Books.BookID
+
+/* STORED PROCEDURES */
+CREATE PROCEDURE dbo.Copies_Owned_Indvidual_Branch @Branch_Name NVARCHAR(30), @Book_Title NVARCHAR(30)
+AS
+BEGIN /* START PROCEDURE */
+
+	DECLARE @errorString VARCHAR(100) -- Declare a 100 fixed-character length string called '@errorString'
+	DECLARE @results AS VARCHAR(5) -- Declare a 5 fixed-character length string called '@results'
+
+	SET @errorString = 'There are branches named ' + @Branch_Name + ' found!' -- Concatenate '@Book_Title' and '@Branch_Name' into this error string
+
+	BEGIN TRY -- Start of TRY BLOCK
+		-- Count how many rows appear in 'tbl_books' were the 'Title' is equal to 'Book_Title'
+		SET @results = (SELECT COUNT(tbl_Library_Branch.BranchName) FROM tbl_Library_Branch WHERE BranchName = @Branch_Name)
+
+		IF @results = 0 -- Then IF we have no rows with that name
+			BEGIN
+				RAISERROR(@errorString, 16, 1) -- We throw an error
+				RETURN
+			END
+
+		ELSE IF @results = 1 -- ELSE IF we have 1 row with that name
+			BEGIN
+				SELECT Copies.BookID AS 'Book ID:', Books.Title AS 'Book Title:', Authors.AuthorName AS 'Author Name:', Books.PublisherName AS 'Publisher Name:',
+					Branches.BranchID AS 'Branch ID:', Branches.BranchName AS 'Branch Name:', Copies.Number_of_Copies AS 'Number of Copies:'  
+
+				FROM tbl_Book_Copies AS Copies 
+					FULL OUTER JOIN tbl_Library_Branch AS Branches ON Copies.BranchID = Branches.BranchID
+					FULL OUTER JOIN tbl_Books AS Books ON Copies.BookID = Books.BookID
+					FULL OUTER JOIN tbl_Book_Authors AS Authors ON Books.BookID = Authors.BookID
+					WHERE Books.Title = @Book_Title AND Branches.BranchName = @Branch_Name;
+			END
+	END TRY
+
+	BEGIN CATCH
+		SELECT @errorString = ERROR_MESSAGE() -- Use the built-in 'ERROR_MESSAGE' function and pass in out 'errorString' string
+		RAISERROR (@errorString, 10, 1)
+	END CATCH
+
+END
+
+[dbo].[Copies_Owned_Indvidual_Branch] 'Norwich', 'The Lord of the Rings';
+
+/* A) How many copies of the book title 'The Lost Tribe' are owned by the library branch whose name is 'Sharpstown'? */
+
 /* TEST QUERIES TO ENSURE DATA IS IN THE TABLES CORRECTLY */
 
-SELECT * 
+
+/* Simple queries to ensure the data has populated each tabel correctly  */
+
+SELECT * -- Query all the content of the table 'tbl_Library_Branch'
 	FROM tbl_Library_Branch
 
-SELECT *
+SELECT * -- Query all the content of the table 'tbl_Book_Copies'
 	FROM tbl_Book_Copies
 
-SELECT *
+SELECT * -- Query all the content of the table 'tbl_Books'
 	FROM tbl_Books
 
-SELECT *
+SELECT * -- Query all the content of the table 'tbl_Book_Authors'
 	FROM tbl_Book_Authors
 
-SELECT * 
+SELECT * -- Query all the content of the table 'tbl_Borrower'
 	FROM tbl_Borrower
 
-SELECT *
+SELECT * -- Query all the content of the table 'tbl_Book_Loans'
 	FROM tbl_Book_Loans
 
-SELECT *
+SELECT * -- Query all the content of the table 'tbl_Publisher'
 	FROM tbl_Publisher
 
+/* List all books in the tale 'Book Copies' then utilizing INNER JOINS accquire the book title and author from the 'Books' table then the publisher name from the
+	'Publisher' table then see how many copies of each book in branch has */
+
+/* SELECT 'BookID', 'Title' and 'PublihserName' from the books table, the 'AuthorName' from the book author table, the 'BranchID' and 'BranchName' from the library branch table
+   then finally the 'number_of_copies' of the book from the book copies table */
 SELECT tbl_Books.BookID AS 'Book ID:', tbl_Books.Title AS 'Book Title:', tbl_Book_Authors.AuthorName AS 'Author Name:', tbl_Books.PublisherName AS 'Publisher Name:',
 	   tbl_Library_Branch.BranchID AS 'Branch ID:', tbl_Library_Branch.BranchName AS 'Branch Name:', tbl_Book_Copies.Number_of_Copies AS 'Number of Book Copies:'
 	FROM tbl_Book_Copies
+	/* Then starting with 'tbl_Book_Copies' SELECT all rows that match the following JOINS */ 
+	/* INNER JOIN the column 'BranchID' between the tables 'tbl_Library_Branch' and 'tbl_Book_Copies' */
 	INNER JOIN tbl_Library_Branch ON tbl_Library_Branch.BranchID = tbl_Book_Copies.BranchID
+	/* INNER JOIN the column 'BookID' between the tables 'tbl_Books' and 'tbl_Book_Copies' */
 	INNER JOIN tbl_Books ON tbl_Books.BookID = tbl_Book_Copies.BookID
+	/* INNER JOIN the column 'BookID' between the tables 'tbl_Book_Authors' and 'tbl_Book_Copies' */
 	INNER JOIN tbl_Book_Authors ON tbl_Book_Authors.BookID = tbl_Books.BookID
+	/* Sort all the result in ascending order by 'BookID' */
 	ORDER BY tbl_Books.BookID
-
-SELECT *
-	FROM ((tbl_Book_Loans 
-	FULL OUTER JOIN tbl_Borrower ON tbl_Book_Loans.CardNo = tbl_Borrower.CardNo) 
-	FULL OUTER JOIN tbl_Books ON tbl_Book_Loans.BookID = tbl_Books.BookID)
-	ORDER BY BranchID DESC;
