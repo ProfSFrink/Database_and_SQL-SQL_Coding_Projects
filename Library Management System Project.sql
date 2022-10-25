@@ -7,7 +7,7 @@
 -- Create a new database called 'db_library'
 CREATE DATABASE db_Library
 
--- Ensure all following statement use database 'db_Library'
+-- Ensure all following statements use database 'db_Library'
 USE db_Library
 GO
 
@@ -249,7 +249,9 @@ INSERT INTO tbl_Book_Loans -- Insert into the table 'tbl_Book_Loans'
 	(1030, 1, 100001, '2022-10-23', '2022-01-30')
 ;
 
-/* Example QUERY to show how each of the tables RELATE to each other (23/10/22) */
+/* ASSIGNMENT QUERIES */
+
+/* EXCERISE) Example QUERY to show how each of the tables RELATE to each other (23/10/22) */
 
 SELECT * -- SELECT ALL COLUMNS from the following tables
 	FROM ((tbl_Book_Loans -- 
@@ -261,7 +263,7 @@ SELECT * -- SELECT ALL COLUMNS from the following tables
 	/* Order result by 'BranchID' in DESCENDING order */
 	ORDER BY BranchID DESC;
 
-/* Using the library database we created write a QUERY that returns all book titles and the authors name (24/10/22) */
+/* EXCERISE) Using the library database we created write a QUERY that returns all book titles and the authors name (24/10/22) */
 
 /* SELECT the columns 'BookID' with ALIAS 'Book ID', 'Title' with ALIAS 'Book Title' and 'PublisherName' with ALIAS 'Publisher Name:' from 'tbl_Books' and 'AuthorName' 
    with ALIAS 'Author Name:' from 'tbl_Book_Authors'  */
@@ -271,7 +273,9 @@ SELECT tbl_Books.BookID AS 'Book ID:', tbl_Books.Title AS 'Book Title:', tbl_Boo
 	/* INNER JOIN the column 'BookID' between the tables 'tbl_Book_Authors' and 'tbl_Books' */
 	INNER JOIN tbl_Book_Authors ON tbl_Book_Authors.BookID = tbl_Books.BookID
 
-/* STORED PROCEDURES */
+GO
+
+/* FINAL ASSIGNMENT STORED PROCEDURES */
 
 /* STORED PROCEDURE A) How many copies of the book title 'The Lost Tribe' are owned by the library branch whose name is 'Sharpstown'? (25/10/22) */
 
@@ -289,19 +293,19 @@ BEGIN /* START PROCEDURE */
 	BEGIN TRY -- Start of TRY BLOCK
 
 		/* COUNT how many rows appear in 'tbl_Library_Branch' that have the 'BranchID' of the branch we are looking for and SET
-			'resultsBranchCheck' to the result */
+			'resultsBranchCheck' to the result of the COUNT */
 		SET @resultsBranchCheck = (SELECT COUNT(tbl_Library_Branch.BranchName) 
 			FROM tbl_Library_Branch 
 			WHERE BranchName = @Branch_Name)
 
 		/* COUNT how many rows appear in 'tbl_Books' that have the '@Book_Title' of the book we are looking for and SET
-			'resultsBookCheck' to the result */
+			'resultsBookCheck' to the result to the result of the COUNT */
 		SET @resultsBookCheck = (SELECT COUNT(tbl_Books.Title) 
 			FROM tbl_Book_Copies 
 			INNER JOIN tbl_Books ON tbl_Books.BookID = tbl_Book_Copies.BookID
 			WHERE tbl_Books.Title = @Book_Title)
 
-		/* IF the branch entered DOES NOT exist in the system  we generate our error string and raise an error */
+		/* IF the branch entered DOES NOT exist in the system we generate an error string, and then raise an error */
 
 		IF @resultsBranchCheck = 0
 			BEGIN
@@ -310,12 +314,12 @@ BEGIN /* START PROCEDURE */
 				RETURN
 			END -- END IF
 
-		/* IF the branch entered DOES exist BUT the book entered DOES NOT exist in the system  we generate our error string and raise an error */
+		/* IF the branch entered DOES exist BUT the book entered DOES NOT exist in the system we generate an error string, and raise then an error */
 
 		ELSE IF @resultsBookCheck = 0 -- Then IF we have no rows with book name
 			BEGIN
 				SET @errorString = 'There are no copies of the book named ' + @Book_Title + ' available in any of our branches!' -- Concatenate '@Book_Title' into this error string
-				RAISERROR(@errorString, 16, 1) -- We throw an error as there are no copies of that book checked out
+				RAISERROR(@errorString, 16, 1) -- We throw an error as the book does not exist in the system
 			END -- END IF
 
 		/*  IF BOTH the branch and book exist then we execute our query */
@@ -352,11 +356,12 @@ BEGIN /* START PROCEDURE */
 
 END /* END OF PROCEDURE */
 
--- EXECUTE STORED PROCEDURE and pass in two arguements 'Branch Name' and 'Book Name'
+-- EXECUTE STORED PROCEDURE and pass in two parameters 'Branch Name' with the arguement 'Sharpstown' and 'Book Name' with the arguement 'The Lost Tribe'
 
 [dbo].[Copies_Owned_Indvidual_Branch] 'Sharpstown', 'The Lost Tribe';
+GO
 
-/* STORED PROCEDURE B) How many copies of the book titled "The Lost Tribe" are by each library branch? (25/10/2022) */
+/* STORED PROCEDURE B) How many copies of the book titled "The Lost Tribe" are owned by each library branch? (25/10/2022) */
 
 CREATE PROCEDURE dbo.Copies_Owned_Each_Branch @Book_Title NVARCHAR(30)
 AS
@@ -370,18 +375,18 @@ BEGIN /* START PROCEDURE */
 	BEGIN TRY -- Start of TRY BLOCK
 
 		/* COUNT how many rows appear in 'tbl_Books' that have the '@Book_Title' of the book we are looking for and SET
-			'resultsBookCheck' to the result */
+			'resultsBookCheck' to the result of the COUNT */
 		SET @resultsBookCheck = (SELECT COUNT(tbl_Books.Title) 
 			FROM tbl_Book_Copies 
 			INNER JOIN tbl_Books ON tbl_Books.BookID = tbl_Book_Copies.BookID
 			WHERE tbl_Books.Title = @Book_Title)
 
-		/* IF the book entered DOES NOT exist in the system  we generate an error string and raise an error */
+		/* IF the book entered DOES NOT exist in the system  we generate an error string, and then raise an error */
 
 		IF @resultsBookCheck = 0 -- Then IF we have no rows with book name
 			BEGIN
 				SET @errorString = 'There are no copies of the book named ' + @Book_Title + ' available in any of our branches!' -- Concatenate '@Book_Title' into this error string
-				RAISERROR(@errorString, 16, 1) -- We throw an error as there are no copies of that book checked out
+				RAISERROR(@errorString, 16, 1) -- We throw an error as the book does not exist in the system
 			END -- END IF
 
 		/*  IF the book exists then we execute our query */
@@ -414,21 +419,25 @@ BEGIN /* START PROCEDURE */
 
 END /* END OF PROCEDURE */
 
--- EXECUTE STORED PROCEDURE and pass in a single arguement 'Book Name'
+-- EXECUTE STORED PROCEDURE and pass in a single parameter 'Book Name' with the arguement 'The Lost Tribe'
 
 [dbo].[Copies_Owned_Each_Branch] 'The Lost Tribe'
+GO
 
-/* STORED PROCEDURE C) Retrieve the names of all borrowes who do not have any books checked out (25/10/2022) */
+/* STORED PROCEDURE C) Retrieve the names of all borrowers who do not have any books checked out (25/10/2022) */
 
 CREATE PROCEDURE No_Books_Checked_Out
 AS
 BEGIN /* START PROCEDURE */
-
-	SELECT * -- SELECT ALL ROWS 
-	FROM tbl_Borrower -- FROM the Borrower table
+	/* We give the tables in this QUERY the following ALIASES
+	   tbl_Borrower = Borrower
+	   tbl_Book_Loans = Loans */
+	/* SELECT COLUMNS 'CardNo', 'Name', 'Address', 'BranchID' and 'Phone' */
+	SELECT Borrower.CardNo AS 'Card No:', Borrower.Name AS 'Name:', Borrower.Address AS 'Address:', Borrower.Phone AS 'Phone:'
+	FROM tbl_Borrower AS Borrower -- FROM the Borrower table
 	WHERE NOT EXISTS ( /* WHERE the PRIMARY KEY 'CardNo' DOES NOT appear as a FOREIGN KEY in the Book Loans table */
-		SELECT 1 FROM tbl_Book_Loans
-		WHERE tbl_Book_Loans.CardNo = tbl_Borrower.CardNo
+		SELECT 1 FROM tbl_Book_Loans AS Loans
+		WHERE Loans.CardNo = Borrower.CardNo
 	) /* This will SELECT all rows in the Borrower table that DOES NOT have a matching key in the book loans table meaning 
 		 anyone with that 'CardNo' DOES NOT currently have any books checked out */
 
