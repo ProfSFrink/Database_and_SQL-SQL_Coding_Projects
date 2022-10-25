@@ -273,7 +273,7 @@ SELECT tbl_Books.BookID AS 'Book ID:', tbl_Books.Title AS 'Book Title:', tbl_Boo
 
 /* STORED PROCEDURES */
 
-/* A) How many copies of the book title 'The Lost Tribe' are owned by the library branch whose name is 'Sharpstown'? */
+/* STORED PROCEDURE A) How many copies of the book title 'The Lost Tribe' are owned by the library branch whose name is 'Sharpstown'? (25/10/22) */
 
 CREATE PROCEDURE dbo.Copies_Owned_Indvidual_Branch @Branch_Name NVARCHAR(30), @Book_Title NVARCHAR(30)
 AS
@@ -284,54 +284,139 @@ BEGIN /* START PROCEDURE */
 	DECLARE @resultsBranchCheck AS VARCHAR(5) -- Declare a 5 fixed-character length string called '@resultsBranchCheck'
 	DECLARE @resultsBookCheck AS VARCHAR(5) -- Declare a 5 fixed-character length strings called'@resultsBookCheck'
 
+	/* The purpose of the TRY BLOCK is to check if both the branch name entered and the book name entered exists in the system */
+
 	BEGIN TRY -- Start of TRY BLOCK
+
 		/* COUNT how many rows appear in 'tbl_Library_Branch' that have the 'BranchID' of the branch we are looking for and SET
 			'resultsBranchCheck' to the result */
 		SET @resultsBranchCheck = (SELECT COUNT(tbl_Library_Branch.BranchName) 
 			FROM tbl_Library_Branch 
 			WHERE BranchName = @Branch_Name)
 
-		/* COUNT how many rows appear in 'tbl_Book_Copies' that have the 'BookID' of the book we are looking for and SET
+		/* COUNT how many rows appear in 'tbl_Books' that have the '@Book_Title' of the book we are looking for and SET
 			'resultsBookCheck' to the result */
 		SET @resultsBookCheck = (SELECT COUNT(tbl_Books.Title) 
 			FROM tbl_Book_Copies 
 			INNER JOIN tbl_Books ON tbl_Books.BookID = tbl_Book_Copies.BookID
 			WHERE tbl_Books.Title = @Book_Title)
 
-		IF @resultsBranchCheck = 0 -- Then IF we have no rows with that branch name
+		/* IF the branch entered DOES NOT exist in the system  we generate our error string and raise an error */
+
+		IF @resultsBranchCheck = 0
 			BEGIN
-				SET @errorString = 'There are no branches named ' + @Branch_Name + ' found!' -- Concatenate '@Book_Title' and '@Branch_Name' into this error string
-				RAISERROR(@errorStringBranch, 16, 1) -- We throw an error as that branch does not exist in the database
+				SET @errorString = 'There are no branches named ' + @Branch_Name + ' found!' -- Concatenate '@Branch_Name' into this error string
+				RAISERROR(@errorString, 16, 1) -- We throw an error as that branch does not exist in the database
 				RETURN
-			END
+			END -- END IF
+
+		/* IF the branch entered DOES exist BUT the book entered DOES NOT exist in the system  we generate our error string and raise an error */
 
 		ELSE IF @resultsBookCheck = 0 -- Then IF we have no rows with book name
 			BEGIN
-				SET @errorString = 'There are no copies of the book named ' + @Book_Title + ' in the ' + @Branch_Name + 'branch!'
-				RAISERROR(@errorStringBook, 16, 1) -- We throw an error as there are no copies of that book checked out
-			END
+				SET @errorString = 'There are no copies of the book named ' + @Book_Title + ' available in any of our branches!' -- Concatenate '@Book_Title' into this error string
+				RAISERROR(@errorString, 16, 1) -- We throw an error as there are no copies of that book checked out
+			END -- END IF
 
-		ELSE IF (@resultsBranchCheck >= 1) AND (@resultsBookCheck >= 1) -- ELSE IF we have 1 row with that name
+		/*  IF BOTH the branch and book exist then we execute our query */
+
+		ELSE IF (@resultsBranchCheck >= 1) AND (@resultsBookCheck >= 1)
 			BEGIN
+				/* We give the tables in this QUERY the following ALIASES
+					tbl_Book_Copies = Copies
+					tbl_Library_Branch = Branches
+					tbl_Books = Books
+					tbl_Book_Authors = Authors 
+					We also give our COLUMNS ALIASES */
+				/* SELECT COLUMNS 'BookID', 'BookTitle', 'AuthorName', 'PublisherName', 'BranchID', 'BranchName' and 'Number_of_Copies'*/
 				SELECT Copies.BookID AS 'Book ID:', Books.Title AS 'Book Title:', Authors.AuthorName AS 'Author Name:', Books.PublisherName AS 'Publisher Name:',
 					Branches.BranchID AS 'Branch ID:', Branches.BranchName AS 'Branch Name:', Copies.Number_of_Copies AS 'Number of Copies:'  
 
+				/*  Start FROM 'tbl_Book_Copies we OUTER JOIN with FOUR tables'*/
 				FROM tbl_Book_Copies AS Copies 
+					/* OUTER JOIN the Library Branch and Book Copies tables through the BranchID column */
 					FULL OUTER JOIN tbl_Library_Branch AS Branches ON Copies.BranchID = Branches.BranchID
+					/* OUTER JOIN the Books and Book Copies tables through the BookID column */
 					FULL OUTER JOIN tbl_Books AS Books ON Copies.BookID = Books.BookID
+					/* OUTER JOIN the Book AUthors and Book tables through the BookID column */
 					FULL OUTER JOIN tbl_Book_Authors AS Authors ON Books.BookID = Authors.BookID
+					/* ONLY SELECT COLUMNS that have the matching Book title and Branch name */
 					WHERE Books.Title = @Book_Title AND Branches.BranchName = @Branch_Name;
-			END
-	END TRY
+			END -- END IF
+	END TRY -- END of TRY BLOCK
 
-	BEGIN CATCH
+	BEGIN CATCH -- Start of CATCH BLOCK
 		SELECT @errorString = ERROR_MESSAGE() -- Use the built-in 'ERROR_MESSAGE' function and pass in out 'errorString' string
 		RAISERROR (@errorString, 10, 1)
-	END CATCH
+	END CATCH -- End of CATCH BLOCK
 
-END
+END /* END OF PROCEDURE */
 
-[dbo].[Copies_Owned_Indvidual_Branch] 'Norwich', 'The Lord of the Rings';
+-- EXECUTE STORED PROCEDURE and pass in two arguements 'Branch Name' and 'Book Name'
+
+[dbo].[Copies_Owned_Indvidual_Branch] 'Sharpstown', 'The Lost Tribe';
+
+/* STORED PROCEDURE B) How many copies of the book titled "The Lost Tribe" are by each library branch? (25/10/2022) */
+
+CREATE PROCEDURE dbo.Copies_Owned_Each_Branch @Book_Title NVARCHAR(30)
+AS
+BEGIN /* START PROCEDURE */
+
+	DECLARE @errorString VARCHAR(100) -- Declare a 100 fixed-character length string called '@errorString'
+	DECLARE @resultsBookCheck AS VARCHAR(5) -- Declare a 5 fixed-character length strings called'@resultsBookCheck'
+
+	/* The purpose of the TRY BLOCK is to check if both the book name entered exists in the system */
+
+	BEGIN TRY -- Start of TRY BLOCK
+
+		/* COUNT how many rows appear in 'tbl_Books' that have the '@Book_Title' of the book we are looking for and SET
+			'resultsBookCheck' to the result */
+		SET @resultsBookCheck = (SELECT COUNT(tbl_Books.Title) 
+			FROM tbl_Book_Copies 
+			INNER JOIN tbl_Books ON tbl_Books.BookID = tbl_Book_Copies.BookID
+			WHERE tbl_Books.Title = @Book_Title)
+
+		/* IF the book entered DOES NOT exist in the system  we generate an error string and raise an error */
+
+		IF @resultsBookCheck = 0 -- Then IF we have no rows with book name
+			BEGIN
+				SET @errorString = 'There are no copies of the book named ' + @Book_Title + ' available in any of our branches!' -- Concatenate '@Book_Title' into this error string
+				RAISERROR(@errorString, 16, 1) -- We throw an error as there are no copies of that book checked out
+			END -- END IF
+
+		/*  IF the book exists then we execute our query */
+
+		ELSE IF @resultsBookCheck >= 1
+			BEGIN
+				 /* We give the tables in this QUERY the following ALIASES
+					tbl_Book_Copies = Copies
+					tbl_Library_Branch = Branches
+					tbl_Books = Books
+					We also give our COLUMNS ALIASES */
+				/* SELECT COLUMNS 'BookID', 'BookTitle', 'PublisherName', 'BranchID', 'BranchName', 'Address' and 'Number_of_Copies'*/
+				SELECT Books.BookID AS 'Book ID:', Books.Title AS 'Book Title:', Books.PublisherName AS 'Publisher Name:', 
+					   Branches.BranchID AS 'Branch ID:', Branches.BranchName AS 'Branch Name:', Branches.Address AS 'Branch Address:', Copies.Number_of_Copies AS 'Number of Book Copies:'
+				FROM ((tbl_Book_Copies AS Copies
+					/* OUTER JOIN the Library Branch and Book Copies tables through the BranchID column */
+					FULL OUTER JOIN tbl_Library_Branch AS Branches ON Branches.BranchID = Copies.BranchID)
+					/* OUTER JOIN the Books and Book Copies tables through the BookID column */
+					FULL OUTER JOIN tbl_Books AS Books ON Books.BookID = Copies.BookID)
+					/* ONLY SELECT COLUMNS that have the matching Book title */
+					WHERE Books.Title = @Book_Title;
+
+			END -- END IF
+	END TRY -- END of TRY BLOCK
+
+	BEGIN CATCH -- Start of CATCH BLOCK
+		SELECT @errorString = ERROR_MESSAGE() -- Use the built-in 'ERROR_MESSAGE' function and pass in out 'errorString' string
+		RAISERROR (@errorString, 10, 1)
+	END CATCH -- End of CATCH BLOCK
+
+END /* END OF PROCEDURE */
+
+-- EXECUTE STORED PROCEDURE and pass in a single arguement 'Book Name'
+
+[dbo].[Copies_Owned_Each_Branch] 'The Lost Tribe'
 
 /* TEST QUERIES TO ENSURE DATA IS IN THE TABLES CORRECTLY */
 
@@ -375,7 +460,7 @@ SELECT tbl_Books.BookID AS 'Book ID:', tbl_Books.Title AS 'Book Title:', tbl_Boo
 	/* INNER JOIN the column 'BookID' between the tables 'tbl_Book_Authors' and 'tbl_Book_Copies' */
 	INNER JOIN tbl_Book_Authors ON tbl_Book_Authors.BookID = tbl_Books.BookID
 	/* Sort all the result in ascending order by 'BookID' */
-	ORDER BY tbl_Books.BookID
+	ORDER BY tbl_Books.Title
 
 DECLARE @errorStringBranch VARCHAR(100) -- Declare a 100 fixed-character length string called '@errorStringBranch'
 DECLARE @errorStringBook VARCHAR(100) -- Declare a 100 fixed-character length string called '@errorStringBook'
@@ -383,7 +468,7 @@ DECLARE @resultsBranchCheck AS VARCHAR(5) -- Declare a 5 fixed-character length 
 DECLARE @resultsBookCheck AS VARCHAR(5) -- Declare a 5 fixed-character length strings called'@resultsBookCheck'
 
 SET @errorStringBranch = 'There are no branches named Sharpstown found!' -- Concatenate '@Book_Title' and '@Branch_Name' into this error string
-SET @errorStringBook = 'There are no copies of the book named The Lost Tribe in the Sharpstown branch!'
+SET @errorStringBook = 'There are no copies of the book named The Lost Tribe in any of our branches'
 
 /* COUNT how many rows appear in 'tbl_Library_Branch' that have the 'BranchID' of the branch we are looking for and SET
 	'resultsBranchCheck' to the result */
@@ -403,5 +488,9 @@ PRINT(@resultsBookCheck)
 PRINT(@errorStringBranch)
 PRINT(@errorStringBook)
 
-
-
+SELECT Books.BookID AS 'Book ID:', Books.Title AS 'Book Title:', Books.PublisherName AS 'Publisher Name:', 
+	   Branches.BranchID AS 'Branch ID:', Branches.BranchName AS 'Branch Name:', Branches.Address AS 'Branch Address:', Copies.Number_of_Copies AS 'Number of Book Copies:'
+FROM ((tbl_Book_Copies AS Copies
+	FULL OUTER JOIN tbl_Library_Branch AS Branches ON Branches.BranchID = Copies.BranchID)
+	FULL OUTER JOIN tbl_Books AS Books ON Books.BookID = Copies.BookID)
+	WHERE Books.Title = 'The Lost Tribe';
